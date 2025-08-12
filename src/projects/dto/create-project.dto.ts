@@ -1,7 +1,23 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateProjectDto {
-  @IsString({ message: 'name must be a string' })
-  @IsNotEmpty({ message: 'name is required' })
-  name: string;
+  @IsString({ message: 'title must be a string' })
+  @IsNotEmpty({ message: 'title is required' })
+  title: string;
+
+  @IsString({ message: 'description must be a string' })
+  @IsNotEmpty({ message: 'description is required' })
+  description: string;
+
+  @IsString({ message: 'projectUrl must be a string' })
+  @IsNotEmpty({ message: 'projectUrl is required' })
+  projectUrl: string;
+
+  @IsString({ message: 'link must be a string' })
+  @IsNotEmpty({ message: 'link is required' })
+  link: string;
+
+  @IsArray({ message: 'frameworks must be an array' })
+  @IsNotEmpty({ message: 'frameworks is required' })
+  frameworks: string[];
 }
