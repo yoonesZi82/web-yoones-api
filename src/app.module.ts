@@ -9,6 +9,7 @@ import { FrameworksModule } from './frameworks/frameworks.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+
     ProjectsModule,
     PrismaModule,
     FrameworksModule,

@@ -9,10 +9,6 @@ export class CreateProjectDto {
   @IsNotEmpty({ message: 'description is required' })
   description: string;
 
-  @IsString({ message: 'projectUrl must be a string' })
-  @IsNotEmpty({ message: 'projectUrl is required' })
-  projectUrl: string;
-
   @IsString({ message: 'link must be a string' })
   @IsNotEmpty({ message: 'link is required' })
   link: string;

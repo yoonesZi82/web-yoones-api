@@ -12,14 +12,29 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 export class ProjectsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CreateProjectDto) {
-    const { frameworks, ...projectData } = data;
+  async create(data: CreateProjectDto & { projectUrl: string }) {
+    const { frameworks, projectUrl, ...projectData } = data;
+    const isProjectExist = await this.prisma.project.findFirst({
+      where: { title: projectData.title },
+    });
 
+    if (isProjectExist) {
+      throw new HttpException(
+        {
+          statusCode: 400,
+          message: 'project already exists',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     try {
       const result = await this.prisma.$transaction(async (prisma) => {
         // 1. Create project
         const project = await prisma.project.create({
-          data: projectData,
+          data: {
+            ...projectData,
+            projectUrl,
+          },
         });
 
         // 2. Create project frameworks relations
@@ -35,11 +50,7 @@ export class ProjectsService {
         return project;
       });
 
-      return {
-        statusCode: 201,
-        message: 'project created successfully',
-        data: result,
-      };
+      return result;
     } catch (error) {
       if (
         error instanceof HttpException ||
@@ -96,7 +107,7 @@ export class ProjectsService {
         );
       }
 
-      await this.prisma.$transaction(async (prisma) => {
+      return await this.prisma.$transaction(async (prisma) => {
         // Update project data
         await prisma.project.update({
           where: { id: project.id },
@@ -116,11 +127,60 @@ export class ProjectsService {
           });
         }
       });
+    } catch (error) {
+      if (
+        error instanceof HttpException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
 
-      return {
-        statusCode: 200,
-        message: 'project updated successfully',
-      };
+      throw new BadRequestException({
+        statusCode: 500,
+        message: 'something went wrong',
+        error: error.message,
+      });
+    }
+  }
+
+  async deleteFramework(projectId: string, frameworkId: string) {
+    try {
+      const project = await this.prisma.project.findUnique({
+        where: { id: projectId },
+      });
+
+      if (!project) {
+        throw new HttpException(
+          {
+            statusCode: 404,
+            message: 'project not found',
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      const framework = await this.prisma.framework.findUnique({
+        where: { id: frameworkId },
+      });
+
+      if (!framework) {
+        throw new HttpException(
+          {
+            statusCode: 404,
+            message: 'framework not found',
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      return await this.prisma.projectFramework.delete({
+        where: {
+          projectId_frameworkId: {
+            projectId: project.id,
+            frameworkId: framework.id,
+          },
+        },
+      });
     } catch (error) {
       if (
         error instanceof HttpException ||
