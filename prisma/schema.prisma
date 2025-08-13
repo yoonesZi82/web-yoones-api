@@ -41,3 +41,13 @@ model ProjectFramework {
   framework   Framework @relation(fields: [frameworkId], references: [id], onDelete: Cascade , onUpdate: Cascade)
    @@unique([projectId, frameworkId])
 }
+
+model User {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  username    String    @unique
+  email       String    @unique
+  mobile      String    @unique
+  password    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}

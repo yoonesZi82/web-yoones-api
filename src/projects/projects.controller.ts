@@ -12,6 +12,7 @@ import {
   BadRequestException,
   HttpStatus,
   HttpException,
+  UseGuards,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
@@ -24,11 +25,13 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import checkSizePhoto from 'src/utils/check-size-photo';
 import { PROJECT_UPLOADS_FOLDER } from '../common/constants';
+import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   @UseInterceptors(
     FileInterceptor('projectUrl', {
