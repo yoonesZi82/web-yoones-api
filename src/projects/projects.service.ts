@@ -7,6 +7,9 @@ import {
 import { PrismaService } from '../utils/prisma.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { promises as fs } from 'fs';
+import { join, resolve } from 'path';
+import { PROJECT_UPLOADS_FOLDER } from '../common/constants';
 
 @Injectable()
 export class ProjectsService {
@@ -89,8 +92,10 @@ export class ProjectsService {
     return projects;
   }
 
-  async update(data: UpdateProjectDto & { id: string }) {
-    const { id, frameworks, ...projectData } = data;
+  async update(
+    data: UpdateProjectDto & { id: string; projectUrl?: Express.Multer.File },
+  ) {
+    const { id, frameworks, projectUrl, ...projectData } = data;
 
     try {
       const project = await this.prisma.project.findUnique({
@@ -99,24 +104,46 @@ export class ProjectsService {
 
       if (!project) {
         throw new HttpException(
-          {
-            statusCode: 404,
-            message: 'project not found',
-          },
+          { statusCode: 404, message: 'project not found' },
           HttpStatus.NOT_FOUND,
         );
       }
 
+      if (projectUrl && project.projectUrl) {
+        const oldImagePath = resolve(
+          PROJECT_UPLOADS_FOLDER,
+          project.projectUrl,
+        );
+        try {
+          await fs.access(oldImagePath);
+          await fs.unlink(oldImagePath);
+          console.log('Old file deleted successfully');
+        } catch (err) {
+          throw new HttpException(
+            {
+              statusCode: 404,
+              message: 'file not found',
+              error: err.message,
+            },
+            HttpStatus.NOT_FOUND,
+          );
+        }
+      }
+
       return await this.prisma.$transaction(async (prisma) => {
-        // Update project data
         await prisma.project.update({
           where: { id: project.id },
-          data: projectData,
+          data: {
+            ...projectData,
+            projectUrl: projectUrl?.filename || project.projectUrl,
+          },
         });
 
-        // Update frameworks if provided
-        if (frameworks) {
-          // Create new relationships
+        if (frameworks && frameworks.length > 0) {
+          await prisma.projectFramework.deleteMany({
+            where: { projectId: project.id },
+          });
+
           const projectFrameworks = frameworks.map((frameworkId) => ({
             projectId: project.id,
             frameworkId,
@@ -135,6 +162,54 @@ export class ProjectsService {
         throw error;
       }
 
+      throw new BadRequestException({
+        statusCode: 500,
+        message: 'something went wrong',
+        error: error.message,
+      });
+    }
+  }
+
+  async delete(id: string) {
+    try {
+      const project = await this.prisma.project.findUnique({
+        where: { id },
+      });
+
+      if (!project) {
+        throw new HttpException(
+          { statusCode: 404, message: 'project not found' },
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      // file path
+      const filePath = join(PROJECT_UPLOADS_FOLDER, project.projectUrl);
+
+      // delete file from system
+      try {
+        await fs.unlink(filePath);
+      } catch {
+        throw new HttpException(
+          {
+            statusCode: 404,
+            message: 'file not found',
+          },
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      // delete record from database
+      return await this.prisma.project.delete({
+        where: { id: project.id },
+      });
+    } catch (error) {
+      if (
+        error instanceof HttpException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
       throw new BadRequestException({
         statusCode: 500,
         message: 'something went wrong',

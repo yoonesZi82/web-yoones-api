@@ -11,6 +11,7 @@ import {
   Put,
   Param,
   Delete,
+  Get,
 } from '@nestjs/common';
 import { FrameworksService } from './frameworks.service';
 import { CreateFrameworkDto } from './dto/create-framework.dto';
@@ -20,6 +21,7 @@ import { extname } from 'path';
 import checkSizePhoto from 'src/utils/check-size-photo';
 import { Response } from 'express';
 import { UpdateFrameworkDto } from './dto/update-framework.dto';
+import { FRAMEWORK_UPLOADS_FOLDER } from 'src/common/constants';
 
 @Controller('frameworks')
 export class FrameworksController {
@@ -29,7 +31,7 @@ export class FrameworksController {
   @UseInterceptors(
     FileInterceptor('frameworkUrl', {
       storage: diskStorage({
-        destination: './public/uploads/framework',
+        destination: FRAMEWORK_UPLOADS_FOLDER,
         filename: (req, file, callback) => {
           const uniqueSuffix =
             Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -74,13 +76,44 @@ export class FrameworksController {
     });
   }
 
+  @Get()
+  async findAll(@Res() res: Response) {
+    const frameworks = await this.frameworksService.findAll();
+    res.status(200).json({
+      statusCode: 200,
+      message: 'frameworks fetched successfully',
+      data: frameworks,
+    });
+  }
+
   @Put(':id')
+  @UseInterceptors(
+    FileInterceptor('frameworkUrl', {
+      storage: diskStorage({
+        destination: FRAMEWORK_UPLOADS_FOLDER,
+        filename: (req, file, callback) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+        },
+      }),
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
   async update(
+    @UploadedFile() file: Express.Multer.File,
     @Body() data: UpdateFrameworkDto,
     @Param('id') id: string,
     @Res() res: Response,
   ) {
-    await this.frameworksService.update({ ...data, id });
+    await this.frameworksService.update({
+      ...data,
+      id,
+      frameworkUrl: file?.filename,
+    });
     res.status(200).json({
       statusCode: 200,
       message: 'framework updated successfully',

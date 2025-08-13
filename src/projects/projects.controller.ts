@@ -23,6 +23,7 @@ import { ParseJsonArrayPipe } from './pipe/parse-array.pipe';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import checkSizePhoto from 'src/utils/check-size-photo';
+import { PROJECT_UPLOADS_FOLDER } from '../common/constants';
 
 @Controller('projects')
 export class ProjectsController {
@@ -32,7 +33,7 @@ export class ProjectsController {
   @UseInterceptors(
     FileInterceptor('projectUrl', {
       storage: diskStorage({
-        destination: './public/uploads/project',
+        destination: PROJECT_UPLOADS_FOLDER,
         filename: (req, file, callback) => {
           const uniqueSuffix =
             Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -94,15 +95,61 @@ export class ProjectsController {
   }
 
   @Put(':id')
+  @UseInterceptors(
+    FileInterceptor('projectUrl', {
+      storage: diskStorage({
+        destination: PROJECT_UPLOADS_FOLDER,
+        filename: (req, file, callback) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+        },
+      }),
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
   async update(
-    @Body() data: UpdateProjectDto,
+    @UploadedFile() file: Express.Multer.File,
     @Param('id') id: string,
+    @Body('frameworks', ParseJsonArrayPipe) frameworks: string[],
+    @Body() data: Omit<UpdateProjectDto, 'frameworks'>,
     @Res() res: Response,
   ) {
-    await this.projectsService.update({ ...data, id });
+    if (file) {
+      const isSizeValid = checkSizePhoto(file);
+
+      if (!isSizeValid) {
+        throw new HttpException(
+          {
+            statusCode: 400,
+            message: 'File size is too large (max 5MB)',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+    const projectData = {
+      ...data,
+      frameworks,
+    };
+
+    await this.projectsService.update({ ...projectData, id, projectUrl: file });
+
     return res.status(200).json({
       statusCode: 200,
       message: 'project updated successfully',
+    });
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string, @Res() res: Response) {
+    await this.projectsService.delete(id);
+    return res.status(200).json({
+      statusCode: 200,
+      message: 'project deleted successfully',
     });
   }
 
