@@ -10,6 +10,7 @@ import { UpdateFrameworkDto } from './dto/update-framework.dto';
 import { join, resolve } from 'path';
 import { FRAMEWORK_UPLOADS_FOLDER } from 'src/common/constants';
 import { promises as fs } from 'fs';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class FrameworksService {
@@ -86,6 +87,13 @@ export class FrameworksService {
     const { id, frameworkUrl, ...frameworkData } = data;
 
     try {
+      const isValidObjectId = ObjectId.isValid(id);
+      if (!isValidObjectId) {
+        throw new HttpException(
+          { statusCode: 400, message: 'invalid framework id' },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
       const framework = await this.prisma.framework.findUnique({
         where: { id },
       });
@@ -145,6 +153,13 @@ export class FrameworksService {
 
   async delete(id: string) {
     try {
+      const isValidObjectId = ObjectId.isValid(id);
+      if (!isValidObjectId) {
+        throw new HttpException(
+          { statusCode: 400, message: 'invalid framework id' },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
       const framework = await this.prisma.framework.findUnique({
         where: { id },
       });

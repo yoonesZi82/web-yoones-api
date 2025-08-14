@@ -12,11 +12,10 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-
+    AuthModule,
     ProjectsModule,
     PrismaModule,
     FrameworksModule,
-    AuthModule,
   ],
   providers: [
     {

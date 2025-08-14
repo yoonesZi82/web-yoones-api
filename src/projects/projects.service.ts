@@ -10,6 +10,7 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { promises as fs } from 'fs';
 import { join, resolve } from 'path';
 import { PROJECT_UPLOADS_FOLDER } from '../common/constants';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class ProjectsService {
@@ -98,6 +99,13 @@ export class ProjectsService {
     const { id, frameworks, projectUrl, ...projectData } = data;
 
     try {
+      const isValidObjectId = ObjectId.isValid(id);
+      if (!isValidObjectId) {
+        throw new HttpException(
+          { statusCode: 400, message: 'invalid project id' },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
       const project = await this.prisma.project.findUnique({
         where: { id },
       });
@@ -172,6 +180,13 @@ export class ProjectsService {
 
   async delete(id: string) {
     try {
+      const isValidObjectId = ObjectId.isValid(id);
+      if (!isValidObjectId) {
+        throw new HttpException(
+          { statusCode: 400, message: 'invalid project id' },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
       const project = await this.prisma.project.findUnique({
         where: { id },
       });

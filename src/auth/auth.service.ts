@@ -85,10 +85,7 @@ export class AuthService {
         );
       }
 
-      const isPasswordValid = await bcrypt.compare(
-        password,
-        user.password as string,
-      );
+      const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         throw new HttpException(
           {
@@ -108,8 +105,8 @@ export class AuthService {
 
       res.cookie('access_token', token, {
         httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
+        secure: false,
+        sameSite: 'lax',
         maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days
       });
 

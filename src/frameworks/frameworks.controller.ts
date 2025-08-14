@@ -12,6 +12,7 @@ import {
   Param,
   Delete,
   Get,
+  UseGuards,
 } from '@nestjs/common';
 import { FrameworksService } from './frameworks.service';
 import { CreateFrameworkDto } from './dto/create-framework.dto';
@@ -22,11 +23,35 @@ import checkSizePhoto from 'src/utils/check-size-photo';
 import { Response } from 'express';
 import { UpdateFrameworkDto } from './dto/update-framework.dto';
 import { FRAMEWORK_UPLOADS_FOLDER } from 'src/common/constants';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 
+@ApiTags('Manage Frameworks')
 @Controller('frameworks')
 export class FrameworksController {
   constructor(private readonly frameworksService: FrameworksService) {}
 
+  // ================= Create Framework =================
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Create framework' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        frameworkUrl: { type: 'string', format: 'binary' },
+        name: { type: 'string', example: 'Framework Name' },
+      },
+      required: ['name', 'frameworkUrl'],
+    },
+  })
   @Post()
   @UseInterceptors(
     FileInterceptor('frameworkUrl', {
@@ -76,6 +101,8 @@ export class FrameworksController {
     });
   }
 
+  // ================= Get All Frameworks =================
+  @ApiOperation({ summary: 'Get all frameworks' })
   @Get()
   async findAll(@Res() res: Response) {
     const frameworks = await this.frameworksService.findAll();
@@ -86,6 +113,21 @@ export class FrameworksController {
     });
   }
 
+  // ================= Update Framework =================
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Update framework' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        frameworkUrl: { type: 'string', format: 'binary' },
+        name: { type: 'string', example: 'Framework Name' },
+      },
+      required: ['name'],
+    },
+  })
   @Put(':id')
   @UseInterceptors(
     FileInterceptor('frameworkUrl', {
@@ -120,6 +162,10 @@ export class FrameworksController {
     });
   }
 
+  // ================= Delete Framework =================
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Delete framework' })
   @Delete(':id')
   async delete(@Param('id') id: string, @Res() res: Response) {
     await this.frameworksService.delete(id);
