@@ -11,6 +11,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser());
+
+  app.enableCors({ origin: '*' });
+
   app.use(
     '/uploads/project',
     express.static(join(__dirname, '..', 'public', 'uploads', 'project')),
