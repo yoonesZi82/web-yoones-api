@@ -102,6 +102,7 @@ export class FrameworksController {
   }
 
   // ================= Get All Frameworks =================
+  @Public()
   @ApiOperation({ summary: 'Get all frameworks' })
   @Get()
   async findAll(@Res() res: Response) {
