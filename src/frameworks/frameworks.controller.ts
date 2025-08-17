@@ -31,6 +31,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
+import { Public } from '@/auth/decorator/public.decorator';
 
 @ApiTags('Manage Frameworks')
 @Controller('frameworks')
