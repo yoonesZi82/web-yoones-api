@@ -12,7 +12,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.use(cookieParser());
 
-  app.enableCors({ origin: '*' });
+  app.enableCors({ origin: 'https://myprojectlanding.ir' });
 
   app.use(
     '/uploads/project',
