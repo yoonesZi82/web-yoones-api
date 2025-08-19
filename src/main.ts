@@ -1,8 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { join } from 'path';
-import * as express from 'express';
 import * as cookieParser from 'cookie-parser';
 import { SwaggerModule } from '@nestjs/swagger';
 import { DocumentBuilder } from '@nestjs/swagger';
@@ -17,16 +15,6 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
-
-  app.use(
-    '/uploads/project',
-    express.static(join(__dirname, '..', 'public', 'uploads', 'project')),
-  );
-
-  app.use(
-    '/uploads/framework',
-    express.static(join(__dirname, '..', 'public', 'uploads', 'framework')),
-  );
 
   const config = new DocumentBuilder()
     .setTitle('Web Yoones Api')

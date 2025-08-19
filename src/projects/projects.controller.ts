@@ -19,10 +19,8 @@ import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import * as multer from 'multer';
 import checkSizePhoto from 'src/utils/check-size-photo';
-import { PROJECT_UPLOADS_FOLDER } from '../common/constants';
 import { JwtAuthGuard } from '@/auth/guards/jwt-auth.guard';
 import { Public } from '@/auth/decorator/public.decorator';
 import {
@@ -66,15 +64,8 @@ export class ProjectsController {
   })
   @UseInterceptors(
     FileInterceptor('projectUrl', {
-      storage: diskStorage({
-        destination: PROJECT_UPLOADS_FOLDER,
-        filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-        },
-      }),
+      storage: multer.memoryStorage(),
+      limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
   async create(
@@ -90,7 +81,7 @@ export class ProjectsController {
       );
     }
 
-    const projectData = { ...data, projectUrl: file.filename, frameworks };
+    const projectData = { ...data, projectUrl: file, frameworks };
     const project = await this.projectsService.create(projectData);
 
     return {
@@ -142,15 +133,7 @@ export class ProjectsController {
   })
   @UseInterceptors(
     FileInterceptor('projectUrl', {
-      storage: diskStorage({
-        destination: PROJECT_UPLOADS_FOLDER,
-        filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-        },
-      }),
+      storage: multer.memoryStorage(),
       limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )

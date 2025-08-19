@@ -17,12 +17,10 @@ import {
 import { FrameworksService } from './frameworks.service';
 import { CreateFrameworkDto } from './dto/create-framework.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import * as multer from 'multer';
 import checkSizePhoto from 'src/utils/check-size-photo';
 import { Response } from 'express';
 import { UpdateFrameworkDto } from './dto/update-framework.dto';
-import { FRAMEWORK_UPLOADS_FOLDER } from 'src/common/constants';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -55,17 +53,7 @@ export class FrameworksController {
   })
   @Post()
   @UseInterceptors(
-    FileInterceptor('frameworkUrl', {
-      storage: diskStorage({
-        destination: FRAMEWORK_UPLOADS_FOLDER,
-        filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-        },
-      }),
-    }),
+    FileInterceptor('frameworkUrl', { storage: multer.memoryStorage() }),
   )
   async create(
     @UploadedFile() file: Express.Multer.File,
@@ -90,7 +78,7 @@ export class FrameworksController {
 
     const frameworkData = {
       ...data,
-      frameworkUrl: file.filename,
+      frameworkUrl: file,
     };
 
     const framework = await this.frameworksService.create(frameworkData);
@@ -133,15 +121,7 @@ export class FrameworksController {
   @Put(':id')
   @UseInterceptors(
     FileInterceptor('frameworkUrl', {
-      storage: diskStorage({
-        destination: FRAMEWORK_UPLOADS_FOLDER,
-        filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          callback(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-        },
-      }),
+      storage: multer.memoryStorage(),
       limits: {
         fileSize: 5 * 1024 * 1024,
       },
@@ -156,7 +136,7 @@ export class FrameworksController {
     await this.frameworksService.update({
       ...data,
       id,
-      frameworkUrl: file?.filename,
+      frameworkUrl: file,
     });
     res.status(200).json({
       statusCode: 200,
