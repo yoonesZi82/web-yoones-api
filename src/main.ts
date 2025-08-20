@@ -11,7 +11,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: ['http://localhost:3000', 'https://myprojectlanding.ir'],
+    origin: ['https://myprojectlanding.ir'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
