@@ -11,7 +11,10 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: ['https://myprojectlanding.ir'],
+    origin: [
+      'https://myprojectlanding.ir',
+      'https://my-landing-oyjtm8fxr-yooneszi82s-projects.vercel.app',
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
