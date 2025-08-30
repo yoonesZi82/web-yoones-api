@@ -14,6 +14,7 @@ async function bootstrap() {
     origin: [
       'https://myprojectlanding.ir',
       'https://my-landing-oyjtm8fxr-yooneszi82s-projects.vercel.app',
+      'https://www.yoones-web.ir',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
