@@ -11,11 +11,7 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: [
-      'https://myprojectlanding.ir',
-      'https://my-landing-oyjtm8fxr-yooneszi82s-projects.vercel.app',
-      'https://www.yoones-web.ir',
-    ],
+    origin: ['https://www.yoones-web.ir'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
@@ -30,7 +26,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT ?? 3001);
+  await app.listen(process.env.PORT ?? 3001, '0.0.0.0');
   console.log(`Server is running on port ${process.env.PORT ?? 3001}`);
 }
 bootstrap();
